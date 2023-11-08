@@ -5,6 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const dbConnect = require("./db/dbconnect")
 const User = require("./db/userModel") 
+const auth = require("./auth");
 
 // body parser configuration
 app.use(bodyParser.json());
@@ -16,6 +17,20 @@ app.get("/", (request, response, next) => {
 });
 
 dbConnect()
+
+// Curb Cores Error by adding a header here
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
+  next();
+});
 
 app.post('/register',(request,response) => {
   brcypt.hash(request.body.password,10).then((hashedPassword)=>{
@@ -30,7 +45,7 @@ app.post('/register',(request,response) => {
         result
       })
     })
-    .catch((e)=> {
+    .catch((error)=> {
       response.status(500).send({
         message:"Error in User Creation",
         error
@@ -79,5 +94,15 @@ app.post('/login',(request,response)=> {
       })
    })
 })
+
+// free endpoint
+app.get("/free-endpoint", (request, response) => {
+  response.json({ message: "You are free to access me anytime" });
+});
+
+// authentication endpoint
+app.get("/auth-endpoint", auth, (request, response) => {
+  response.json({ message: "You are authorized to access me" });
+});
 
 module.exports = app;
